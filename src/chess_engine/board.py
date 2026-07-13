@@ -7,44 +7,47 @@ class Board:
 
     def create_board(self):
         # Initialize an 8x8 chess board with pieces in starting positions
-        board = [[{} for _ in range(8)] for _ in range(8)]
+        board = [[None for _ in range(8)] for _ in range(8)]
         
         for column in range(8):
-            board[1][column]["P"] = Pawn("white", (1, column), board=board)
+            board[1][column] = Pawn("white", (1, column))
         
-        board[0][0]["R"] = Rook("white", (0, 0), board=board)
-        board[0][1]["N"] = Knight("white", (0, 1), board=board)
-        board[0][2]["B"] = Bishop("white", (0, 2), board=board)
-        board[0][3]["Q"] = Queen("white", (0, 3), board=board)
-        board[0][4]["K"] = King("white", (0, 4), board=board)
-        board[0][5]["B"] = Bishop("white", (0, 5), board=board)
-        board[0][6]["N"] = Knight("white", (0, 6), board=board)
-        board[0][7]["R"] = Rook("white", (0, 7), board=board)
+        board[0][0] = Rook(color="white", position=(0, 0))
+        board[0][1] = Knight(color="white", position=(0, 1))
+        board[0][2] = Bishop(color="white", position=(0, 2))
+        board[0][3] = Queen(color="white", position=(0, 3))
+        board[0][4] = King(color="white", position=(0, 4))
+        board[0][5] = Bishop(color="white", position=(0, 5))
+        board[0][6] = Knight(color="white", position=(0, 6))
+        board[0][7] = Rook(color="white", position=(0, 7))
 
         for column in range(8):
-            board[6][column]["p"] = Pawn("black", (6, column), board=board)
+            board[6][column] = Pawn(color="black", position=(6, column))
 
-        board[7][0]["r"] = Rook("black", (7, 0), board=board)
-        board[7][1]["n"] = Knight("black", (7, 1), board=board)
-        board[7][2]["b"] = Bishop("black", (7, 2), board=board)
-        board[7][3]["q"] = Queen("black", (7, 3), board=board)
-        board[7][4]["k"] = King("black", (7, 4), board=board)
-        board[7][5]["b"] = Bishop("black", (7, 5), board=board)
-        board[7][6]["n"] = Knight("black", (7, 6), board=board)
-        board[7][7]["r"] = Rook("black", (7, 7), board=board)
+        board[7][0] = Rook(color="black", position=(7, 0))
+        board[7][1] = Knight(color="black", position=(7, 1))
+        board[7][2] = Bishop(color="black", position=(7, 2))
+        board[7][3] = Queen(color="black", position=(7, 3))
+        board[7][4] = King(color="black", position=(7, 4))
+        board[7][5] = Bishop(color="black", position=(7, 5))
+        board[7][6] = Knight(color="black", position=(7, 6))
+        board[7][7] = Rook(color="black", position=(7, 7))
 
         return board
 
     def display(self):
         for row in reversed(self.board):
-            print(" ".join(next(iter(square), ".") for square in row))
+            print(" ".join("." if square is None else str(square) for square in row))
         
     def get_piece(self, position):
         col, row = position
-        return list(self.board[row][col].values())[0] if self.board[row][col] else None
+        return self.board[row][col] if self.board[row][col] else None
     
+    def quick_test(self):
+        return self.board[0][2].generate_legal_moves(self.board)
 
 if __name__ == "__main__":
     chess_board = Board()
     chess_board.display()
     print(chess_board.get_piece((2, 0)))
+    print(chess_board.quick_test())
