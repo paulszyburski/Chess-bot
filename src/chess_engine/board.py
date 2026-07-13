@@ -1,5 +1,5 @@
 
-from .pieces import Pawn, Rook, Knight, Bishop, Queen, King
+from pieces import Pawn, Rook, Knight, Bishop, Queen, King
 
 class Board:
     def __init__(self):

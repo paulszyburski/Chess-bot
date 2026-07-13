@@ -1,3 +1,4 @@
+from utils import is_square_under_attack
 
 class Pawn:
     def __init__(self, color, position):
@@ -31,6 +32,10 @@ class Pawn:
 
         return legal_moves
 
+    def make_move(self, new_position):
+        self.position = new_position
+        self.has_moved = True
+
 class Bishop:
     def __init__(self, color, position):
         self.color = color
@@ -61,6 +66,10 @@ class Bishop:
                 new_row += d_row
                 new_col += d_col
         return legal_moves
+
+    def make_move(self, new_position):
+        self.position = new_position
+        self.has_moved = True
     
 class Knight:
     def __init__(self, color, position):
@@ -86,6 +95,10 @@ class Knight:
                     legal_moves.append((new_row, new_col))
 
         return legal_moves
+
+    def make_move(self, new_position):
+        self.position = new_position
+        self.has_moved = True
 
 class Rook:
     def __init__(self, color, position):
@@ -118,6 +131,10 @@ class Rook:
                 new_row += new_row
                 new_col += new_col
         return legal_moves
+    
+    def make_move(self, new_position):
+        self.position = new_position
+        self.has_moved = True
 
 class Queen:
     def __init__(self, color, position):
@@ -153,6 +170,10 @@ class Queen:
                 new_col += d_col
         return legal_moves
 
+    def make_move(self, new_position):
+        self.position = new_position
+        self.has_moved = True
+
 class King:
     def __init__(self, color, position):
         self.color = color
@@ -174,7 +195,51 @@ class King:
 
             if 0 <= new_row < 8 and 0 <= new_col < 8:
                 target = board[new_row][new_col]
-                if target is None or target.color != self.color:
-                    legal_moves.append((new_row, new_col))
+                if not is_square_under_attack(board, (new_row, new_col), "white" if self.color == "black" else "black"):
+                    if target is None or target.color != self.color:
+                        legal_moves.append((new_row, new_col))
+
+        if not self.has_moved:
+            if self.color == "white":
+                if is_square_under_attack(board, (0, 3), "white"):
+                    pass
+                if board[0][7] is not None and isinstance(board[0][7], Rook) and not board[0][7].has_moved:
+                    if board[0][5] is None and board[0][6] is None and not is_square_under_attack(board, (0, 5), "black") and not is_square_under_attack(board, (0, 6), "black"):
+                        legal_moves.append((0, 6))
+                if board[0][0] is not None and isinstance(board[0][0], Rook) and not board[0][0].has_moved:
+                    if board[0][1] is None and board[0][2] is None and board[0][3] is None and not is_square_under_attack(board, (0, 2), "black") and not is_square_under_attack(board, (0, 3), "black"):
+                        legal_moves.append((0, 2))
+            else:
+                if is_square_under_attack(board, (7, 3), "black"):
+                    pass
+                if board[7][7] is not None and isinstance(board[7][7], Rook) and not board[7][7].has_moved:
+                    if board[7][5] is None and board[7][6] is None and not is_square_under_attack(board, (7, 5), "white") and not is_square_under_attack(board, (7, 6), "white"):
+                        legal_moves.append((7, 6))
+                if board[7][0] is not None and isinstance(board[7][0], Rook) and not board[7][0].has_moved:
+                    if board[7][1] is None and board[7][2] is None and board[7][3] is None and not is_square_under_attack(board, (7, 2), "white") and not is_square_under_attack(board, (7, 3), "white"):
+                        legal_moves.append((7, 2))
 
         return legal_moves
+
+    def make_move(self, new_position, board):
+        if new_position in self.generate_legal_moves(board):
+            y = 0 if self.color == "white" else 7
+            if new_position == (y, 6) and not self.has_moved:
+                rook = board[y][7]
+                rook.has_moved = True
+                rook.position = (y, 5)
+                board[y][5] = rook
+                board[y][7] = None
+            elif new_position == (y, 2) and not self.has_moved:
+                rook = board[y][0]
+                rook.has_moved = True
+                rook.position = (y, 3)
+                board[y][3] = rook
+                board[y][0] = None
+            self.position = new_position
+            self.has_moved = True
+        else:
+            raise ValueError("Illegal move for the King.")
+
+
+
