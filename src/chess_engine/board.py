@@ -1,5 +1,5 @@
 
-from pieces import Pawn, Rook, Knight, Bishop, Queen, King
+from .pieces import Pawn, Rook, Knight, Bishop, Queen, King
 
 class Board:
     def __init__(self):
@@ -37,10 +37,15 @@ class Board:
 
     def display(self):
         for row in reversed(self.board):
-            print(" ".join("." if square is None else str(square) for square in row))
+            for piece in row:
+                if piece is None:
+                    print(".", end=" ")
+                else:
+                    print(piece.symbol, end=" ")
+            print()
         
     def get_piece(self, position):
-        col, row = position
+        row, col = position
         return self.board[row][col] if self.board[row][col] else None
     
     def quick_test(self):
@@ -49,5 +54,5 @@ class Board:
 if __name__ == "__main__":
     chess_board = Board()
     chess_board.display()
-    print(chess_board.get_piece((2, 0)))
+    print(chess_board.get_piece((4,1)))
     print(chess_board.quick_test())

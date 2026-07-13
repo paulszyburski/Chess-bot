@@ -4,6 +4,7 @@ class Pawn:
         self.color = color
         self.position = position
         self.has_moved = False
+        self.symbol = "P" if color == "white" else "p"
     
     def generate_legal_moves(self, board):
         legal_moves = []
@@ -34,6 +35,7 @@ class Bishop:
     def __init__(self, color, position):
         self.color = color
         self.position = position
+        self.symbol = "B" if color == "white" else "b"
 
     def generate_legal_moves(self, board):
         legal_moves = []
@@ -64,6 +66,7 @@ class Knight:
     def __init__(self, color, position):
         self.color = color
         self.position = position
+        self.symbol = "N" if color == "white" else "n"
 
     def generate_legal_moves(self, board):
         legal_moves = []
@@ -89,6 +92,7 @@ class Rook:
         self.color = color
         self.position = position
         self.has_moved = False
+        self.symbol = "R" if color == "white" else "r"
 
     def generate_legal_moves(self, board):
         legal_moves = []
@@ -119,6 +123,7 @@ class Queen:
     def __init__(self, color, position):
         self.color = color
         self.position = position
+        self.symbol = "Q" if color == "white" else "q"
 
     def generate_legal_moves(self, board):
         legal_moves = []
@@ -153,6 +158,7 @@ class King:
         self.color = color
         self.position = position
         self.has_moved = False
+        self.symbol = "K" if color == "white" else "k"
 
     def generate_legal_moves(self, board):
         legal_moves = []
