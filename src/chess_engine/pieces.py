@@ -1,4 +1,4 @@
-from utils import is_square_under_attack
+from .utils import is_square_under_attack
 
 class Pawn:
     def __init__(self, color, position):
@@ -32,9 +32,13 @@ class Pawn:
 
         return legal_moves
 
-    def make_move(self, new_position):
+    def make_move(self, new_position, board):
+        grid = board.board
+        grid[self.position[0]][self.position[1]] = None
+        grid[new_position[0]][new_position[1]] = self
         self.position = new_position
         self.has_moved = True
+        board.side_to_move = "black" if self.color == "white" else "white"
 
 class Bishop:
     def __init__(self, color, position):
@@ -67,9 +71,13 @@ class Bishop:
                 new_col += d_col
         return legal_moves
 
-    def make_move(self, new_position):
+    def make_move(self, new_position, board):
+        grid = board.board
+        grid[self.position[0]][self.position[1]] = None
+        grid[new_position[0]][new_position[1]] = self
         self.position = new_position
         self.has_moved = True
+        board.side_to_move = "black" if self.color == "white" else "white"
     
 class Knight:
     def __init__(self, color, position):
@@ -96,9 +104,13 @@ class Knight:
 
         return legal_moves
 
-    def make_move(self, new_position):
+    def make_move(self, new_position, board):
+        grid = board.board
+        grid[self.position[0]][self.position[1]] = None
+        grid[new_position[0]][new_position[1]] = self
         self.position = new_position
         self.has_moved = True
+        board.side_to_move = "black" if self.color == "white" else "white"
 
 class Rook:
     def __init__(self, color, position):
@@ -114,8 +126,8 @@ class Rook:
 
         directions = [(1,0), (-1,0), (0,1), (0,-1)]
 
-        for new_row, new_col in directions:
-            new_row, new_col = row + new_row, col + new_col
+        for d_row, d_col in directions:
+            new_row, new_col = row + d_row, col + d_col
 
             while 0 <= new_row < 8 and 0 <= new_col < 8:
                 target = board[new_row][new_col]
@@ -128,13 +140,27 @@ class Rook:
                 else:
                     break
 
-                new_row += new_row
-                new_col += new_col
+                new_row += d_row
+                new_col += d_col
         return legal_moves
     
-    def make_move(self, new_position):
+    def make_move(self, new_position, board):
+        if self.color == "white" and self.has_moved == False:
+            if self.position == (0, 0):
+                board.white_can_castle_queenside = False
+            elif self.position == (0, 7):
+                board.white_can_castle_kingside = False
+        elif self.color == "black" and self.has_moved == False:
+            if self.position == (7, 0):
+                board.black_can_castle_queenside = False
+            elif self.position == (7, 7):
+                board.black_can_castle_kingside = False
+        grid = board.board
+        grid[self.position[0]][self.position[1]] = None
+        grid[new_position[0]][new_position[1]] = self
         self.position = new_position
         self.has_moved = True
+        board.side_to_move = "black" if self.color == "white" else "white"
 
 class Queen:
     def __init__(self, color, position):
@@ -170,9 +196,13 @@ class Queen:
                 new_col += d_col
         return legal_moves
 
-    def make_move(self, new_position):
+    def make_move(self, new_position, board):
+        grid = board.board
+        grid[self.position[0]][self.position[1]] = None
+        grid[new_position[0]][new_position[1]] = self
         self.position = new_position
         self.has_moved = True
+        board.side_to_move = "black" if self.color == "white" else "white"
 
 class King:
     def __init__(self, color, position):
@@ -222,24 +252,49 @@ class King:
         return legal_moves
 
     def make_move(self, new_position, board):
-        if new_position in self.generate_legal_moves(board):
-            y = 0 if self.color == "white" else 7
-            if new_position == (y, 6) and not self.has_moved:
-                rook = board[y][7]
+        grid = board.board
+        if new_position not in self.generate_legal_moves(grid):
+            raise ValueError("Illegal move for the King.")
+
+        old_row, old_col = self.position
+        new_row, new_col = new_position
+        y = 0 if self.color == "white" else 7
+
+        # Move rook when castling
+        if new_position == (y, 6) and not self.has_moved:
+            rook = grid[y][7]
+            if rook is None or not isinstance(rook, Rook) or rook.has_moved:
+                raise ValueError("Cannot castle: Rook has moved or is not present.")
+            else:
                 rook.has_moved = True
                 rook.position = (y, 5)
-                board[y][5] = rook
-                board[y][7] = None
-            elif new_position == (y, 2) and not self.has_moved:
-                rook = board[y][0]
+                grid[y][5] = rook
+                grid[y][7] = None
+
+        elif new_position == (y, 2) and not self.has_moved:
+            rook = grid[y][0]
+            if rook is None or not isinstance(rook, Rook) or rook.has_moved:
+                raise ValueError("Cannot castle: Rook has moved or is not present.")
+            else:
                 rook.has_moved = True
                 rook.position = (y, 3)
-                board[y][3] = rook
-                board[y][0] = None
-            self.position = new_position
-            self.has_moved = True
-        else:
-            raise ValueError("Illegal move for the King.")
+                grid[y][3] = rook
+                grid[y][0] = None
+
+        grid[old_row][old_col] = None
+        grid[new_row][new_col] = self
+
+        self.position = new_position
+        self.has_moved = True
+
+        if self.color == "white":
+            board.white_can_castle_kingside = False
+            board.white_can_castle_queenside = False
+        elif self.color == "black":
+            board.black_can_castle_kingside = False
+            board.black_can_castle_queenside = False
+
+        board.side_to_move = "black" if self.color == "white" else "white"
 
 
 

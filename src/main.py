@@ -1,12 +1,15 @@
+from bot.nn_bot import NNBot
 import chess_engine.board as board
 import chess_engine.utils as utils
 import bot.random_move as random_move
 
 import time
+from bot.nn import NN
+from bot.nn_bot import NNBot
 
 def main():
     chess_board = board.Board()
-    chess_bot = random_move.RandomBot(color="black")
+    chess_bot = NNBot(color="black")
 
     while True:
         move = input("Pick your piece and move seperated by space: ").split()
@@ -26,21 +29,16 @@ def main():
             print("Illegal move for the selected piece.")
             continue
 
-        piece.position = end
-        chess_board.board[end[0]][end[1]] = piece
-        chess_board.board[start[0]][start[1]] = None
-        chess_board.display()
+        piece.make_move(end, chess_board)
         print("\n\nBot's turn:")
         time.sleep(1)
 
-        start, end = chess_bot.choose_move(chess_board.board)
+        start, end = chess_bot.choose_move(chess_board)
         if start is None or end is None:
             print("No legal moves available for the bot.")
             break
         bot_piece = chess_board.get_piece(start)
-        bot_piece.position = end
-        chess_board.board[end[0]][end[1]] = bot_piece
-        chess_board.board[start[0]][start[1]] = None
+        bot_piece.make_move(end, chess_board)
         chess_board.display()
 
 
@@ -50,4 +48,6 @@ def main():
 
 
 if __name__ == "__main__":
+    #ai = NN()
+
     main()

@@ -1,9 +1,14 @@
 
-from pieces import Pawn, Rook, Knight, Bishop, Queen, King
+from .pieces import Pawn, Rook, Knight, Bishop, Queen, King
 
 class Board:
     def __init__(self):
         self.board = self.create_board()
+        self.side_to_move = "white" 
+        self.white_can_castle_kingside = True
+        self.white_can_castle_queenside = True
+        self.black_can_castle_kingside = True
+        self.black_can_castle_queenside = True
 
     def create_board(self):
         # Initialize an 8x8 chess board with pieces in starting positions
