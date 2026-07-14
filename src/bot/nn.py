@@ -13,9 +13,9 @@ from sklearn.neural_network import MLPClassifier
 DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 MODEL_PATH = DATA_DIR / "chess_model.joblib"
 
-MAX_GAMES = 100_000
-MAX_POSITIONS = 10_000_000
-MIN_RATING = 1200
+MAX_GAMES = 30_000
+MAX_POSITIONS = 1_000_000_000
+MIN_RATING = 1000
 BATCH_SIZE = 2048
 
 
@@ -137,8 +137,10 @@ class NN:
             return
 
         self.model = MLPClassifier(
-            hidden_layer_sizes=(128,),
-            batch_size=256,
+            hidden_layer_sizes=(256, 128),
+            batch_size=512,
+            learning_rate_init=0.001,
+            alpha=0.0001,
             random_state=42,
         )
 
@@ -169,8 +171,12 @@ class NN:
                     board = game.board()
 
                     for move in game.mainline_moves():
-                        # Ignore positions involving en passant and promotion.
-                        if board.ep_square is None and move.promotion is None:
+                        # Ignore only en passant positions.
+                        # Promotion type is intentionally not encoded: queen,
+                        # rook, bishop, and knight promotions all use the same
+                        # start-square -> end-square label. Our engine then
+                        # automatically promotes the pawn to a queen.
+                        if board.ep_square is None:
                             positions.append(self.encode_training_board(board))
                             moves.append(self.encode_move(move))
                             positions_processed += 1

@@ -4,12 +4,12 @@ from .nn import NN
 
 
 class NNBot:
-    def __init__(self, color):
+    def __init__(self, color, temperature=1.0):
         self.color = color
+        self.temperature = temperature
         self.nn = NN()
 
-    @staticmethod
-    def encode_move(start, end):
+    def encode_move(self, start, end):
         start_row, start_col = start
         end_row, end_col = end
 
@@ -19,31 +19,57 @@ class NNBot:
         return start_square * 64 + end_square
 
     def choose_move(self, chess_board):
-        legal_moves = []
-        grid = chess_board.board
-
-        for row in range(8):
-            for col in range(8):
-                piece = grid[row][col]
-
-                if piece is not None and piece.color == self.color:
-                    for end in piece.generate_legal_moves(grid):
-                        legal_moves.append((piece.position, end))
+        legal_moves = chess_board.get_all_legal_moves(self.color)
 
         if not legal_moves:
             return None, None
 
-        encoded_board = self.nn.encode_board(chess_board).reshape(1, -1)
+        encoded_board = self.nn.encode_board(
+            chess_board
+        ).reshape(1, -1)
+
         probabilities = self.nn.model.predict_proba(encoded_board)[0]
 
         probability_by_move = dict(
             zip(self.nn.model.classes_, probabilities)
         )
 
-        return max(
-            legal_moves,
-            key=lambda move: probability_by_move.get(
-                self.encode_move(move[0], move[1]),
-                0.0,
-            ),
+        legal_move_probabilities = np.array(
+            [
+                probability_by_move.get(
+                    self.encode_move(start, end),
+                    0.0
+                )
+                for start, end in legal_moves
+            ],
+            dtype=np.float64
         )
+
+        # Temperature 0 means always choose the best move.
+        if self.temperature <= 0:
+            best_index = np.argmax(legal_move_probabilities)
+            return legal_moves[best_index]
+
+        # Prevent log(0).
+        legal_move_probabilities = np.clip(
+            legal_move_probabilities,
+            1e-12,
+            None
+        )
+
+        # Apply temperature.
+        log_probabilities = np.log(legal_move_probabilities)
+        log_probabilities /= self.temperature
+
+        # Prevent overflow in exp().
+        log_probabilities -= np.max(log_probabilities)
+
+        adjusted_probabilities = np.exp(log_probabilities)
+        adjusted_probabilities /= adjusted_probabilities.sum()
+
+        chosen_index = np.random.choice(
+            len(legal_moves),
+            p=adjusted_probabilities
+        )
+
+        return legal_moves[chosen_index]

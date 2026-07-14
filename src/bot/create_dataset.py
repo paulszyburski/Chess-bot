@@ -100,11 +100,12 @@ def create_dataset():
         board = game.board()
 
         for move in game.mainline_moves():
-            # Your engine does not support promotion yet,
-            # so ignore promotion examples for now.
-            if move.promotion is None:
-                positions.append(encode_board(board))
-                moves.append(encode_move(move))
+            # Include promotion moves. The promotion piece is intentionally
+            # ignored by encode_move(), so every promotion is learned as the
+            # same start-square -> end-square move. The engine automatically
+            # promotes to a queen when that move is played.
+            positions.append(encode_board(board))
+            moves.append(encode_move(move))
 
             board.push(move)
 
