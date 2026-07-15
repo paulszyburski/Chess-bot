@@ -13,9 +13,9 @@ from sklearn.neural_network import MLPClassifier
 DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 MODEL_PATH = DATA_DIR / "chess_model.joblib"
 
-MAX_GAMES = 30_000
+MAX_GAMES = 600_000
 MAX_POSITIONS = 1_000_000_000
-MIN_RATING = 1000
+MIN_RATING = 1500
 BATCH_SIZE = 2048
 
 
@@ -137,8 +137,8 @@ class NN:
             return
 
         self.model = MLPClassifier(
-            hidden_layer_sizes=(256, 128),
-            batch_size=512,
+            hidden_layer_sizes=(512, 256),
+            batch_size=1024,
             learning_rate_init=0.001,
             alpha=0.0001,
             random_state=42,

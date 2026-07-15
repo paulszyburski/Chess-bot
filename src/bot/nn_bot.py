@@ -17,6 +17,48 @@ class NNBot:
         end_square = end_row * 8 + end_col
 
         return start_square * 64 + end_square
+    
+    def list_top_n_moves(self, chess_board, n=5):
+        legal_moves = chess_board.get_all_legal_moves(self.color)
+
+        if not legal_moves:
+            return None, None
+
+        encoded_board = self.nn.encode_board(
+            chess_board
+        ).reshape(1, -1)
+
+        probabilities = self.nn.model.predict_proba(encoded_board)[0]
+
+        probability_by_move = dict(
+            zip(self.nn.model.classes_, probabilities)
+        )
+
+        legal_move_probabilities = np.array(
+            [
+                probability_by_move.get(
+                    self.encode_move(start, end),
+                    0.0
+                )
+                for start, end in legal_moves
+            ],
+            dtype=np.float64
+        )
+
+        n = max(0, min(n, len(legal_moves)))
+
+        if n == 0:
+            return []
+
+        top_indexes = np.argsort(legal_move_probabilities)[::-1][:n]
+
+        top_moves = [
+            legal_moves[index]
+            for index in top_indexes
+        ]
+
+        return top_moves
+
 
     def choose_move(self, chess_board):
         legal_moves = chess_board.get_all_legal_moves(self.color)
