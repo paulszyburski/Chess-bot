@@ -9,7 +9,6 @@ import numpy as np
 import zstandard as zstd
 from sklearn.neural_network import MLPClassifier
 
-
 DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 MODEL_PATH = DATA_DIR / "chess_model.joblib"
 
@@ -20,14 +19,12 @@ BATCH_SIZE = 2048
 
 
 class NN:
-    def __init__(self):
+    def __init__(self, load=True):
         self.model = None
         DATA_DIR.mkdir(exist_ok=True)
 
-        if MODEL_PATH.exists():
+        if load and MODEL_PATH.exists():
             self.load_model(MODEL_PATH)
-        elif self.data_files():
-            self.train()
 
     def data_files(self):
         return sorted(DATA_DIR.glob("*.pgn")) + sorted(DATA_DIR.glob("*.pgn.zst"))
@@ -37,13 +34,10 @@ class NN:
         if path.suffix == ".zst":
             with path.open("rb") as compressed:
                 with zstd.ZstdDecompressor().stream_reader(
-                    compressed,
-                    read_across_frames=True,
+                    compressed, read_across_frames=True
                 ) as reader:
                     with io.TextIOWrapper(
-                        reader,
-                        encoding="utf-8",
-                        errors="replace",
+                        reader, encoding="utf-8", errors="replace"
                     ) as text:
                         yield text
         else:
@@ -79,7 +73,6 @@ class NN:
 
     @staticmethod
     def encode_board(board):
-        """Encode your own chess_engine.board.Board object."""
         encoded = np.zeros((17, 8, 8), dtype=np.float32)
         piece_layers = {"P": 0, "N": 1, "B": 2, "R": 3, "Q": 4, "K": 5}
 
@@ -155,8 +148,7 @@ class NN:
 
             with self.open_pgn(path) as pgn:
                 while (
-                    games_processed < MAX_GAMES
-                    and positions_processed < MAX_POSITIONS
+                    games_processed < MAX_GAMES and positions_processed < MAX_POSITIONS
                 ):
                     game = chess.pgn.read_game(pgn)
 
@@ -171,11 +163,6 @@ class NN:
                     board = game.board()
 
                     for move in game.mainline_moves():
-                        # Ignore only en passant positions.
-                        # Promotion type is intentionally not encoded: queen,
-                        # rook, bishop, and knight promotions all use the same
-                        # start-square -> end-square label. Our engine then
-                        # automatically promotes the pawn to a queen.
                         if board.ep_square is None:
                             positions.append(self.encode_training_board(board))
                             moves.append(self.encode_move(move))
@@ -196,10 +183,7 @@ class NN:
                         if positions_processed >= MAX_POSITIONS:
                             break
 
-            if (
-                games_processed >= MAX_GAMES
-                or positions_processed >= MAX_POSITIONS
-            ):
+            if games_processed >= MAX_GAMES or positions_processed >= MAX_POSITIONS:
                 break
 
         if positions:
@@ -227,4 +211,4 @@ class NN:
 
 
 if __name__ == "__main__":
-    NN()
+    NN(load=False).train()

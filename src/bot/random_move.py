@@ -1,10 +1,10 @@
-
 class RandomBot:
     def __init__(self, color):
         self.color = color
 
     def choose_move(self, board):
         import random
+
         legal_moves = []
 
         for row in range(8):

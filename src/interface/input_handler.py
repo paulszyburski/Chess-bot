@@ -1,6 +1,6 @@
 import pygame
 
-from .settings import BOARD_SIZE, SQUARE_SIZE
+from .settings import SQUARE_SIZE
 
 
 class InputHandler:
@@ -31,4 +31,3 @@ class InputHandler:
             self.select_piece(chess_board, position)
         else:
             self.try_move(chess_board, position)
-

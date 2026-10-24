@@ -1,11 +1,10 @@
+from pathlib import Path
+
 import pygame
 
-from .settings import (
-    BOARD_SIZE,
-    SQUARE_SIZE,
-    LIGHT_SQUARE_COLOR,
-    DARK_SQUARE_COLOR,
-)
+from .settings import BOARD_SIZE, DARK_SQUARE_COLOR, LIGHT_SQUARE_COLOR, SQUARE_SIZE
+
+ASSET_DIR = Path(__file__).resolve().parents[2] / "assets"
 
 
 class BoardRenderer:
@@ -25,16 +24,13 @@ class BoardRenderer:
                     color = DARK_SQUARE_COLOR
 
                 square = pygame.Rect(
-                    col * SQUARE_SIZE,
-                    row * SQUARE_SIZE,
-                    SQUARE_SIZE,
-                    SQUARE_SIZE,
+                    col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE
                 )
 
                 pygame.draw.rect(surface, color, square)
 
         return surface
-    
+
     def draw_pieces(self, board):
         for row in range(8):
             for col in range(8):
@@ -45,9 +41,10 @@ class BoardRenderer:
 
                 piece_name = piece.color.upper()[0] + piece.symbol.lower()
 
-                piece_image = pygame.image.load(f'assets/{piece_name}.png')
-                piece_image = pygame.transform.scale(piece_image,
-                                                     (SQUARE_SIZE, SQUARE_SIZE))
+                piece_image = pygame.image.load(ASSET_DIR / f"{piece_name}.png")
+                piece_image = pygame.transform.scale(
+                    piece_image, (SQUARE_SIZE, SQUARE_SIZE)
+                )
 
                 displayed_row = 7 - row
 
@@ -56,9 +53,6 @@ class BoardRenderer:
 
                 self.screen.blit(piece_image, (x, y))
 
-
-
     def draw(self):
         self.screen.blit(self.board_surface, (0, 0))
         self.draw_pieces(self.board)
-

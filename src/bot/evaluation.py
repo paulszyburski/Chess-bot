@@ -1,22 +1,14 @@
 def evaluate(board, checkmate, stalemate, side_to_move):
-    piece_to_points = {
-        "p": 1,
-        "b": 3,
-        "n": 3,
-        "r": 5,
-        "q": 9,
-    }
+    piece_to_points = {"p": 1, "b": 3, "n": 3, "r": 5, "q": 9}
 
     if stalemate:
         return 0
 
     if checkmate:
         if side_to_move == "black":
-            # Black has been checkmated, so White won.
             return 10000
 
         if side_to_move == "white":
-            # White has been checkmated, so Black won.
             return -10000
 
     white_sum = 0

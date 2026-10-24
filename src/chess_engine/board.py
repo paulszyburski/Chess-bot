@@ -1,5 +1,4 @@
-
-from .pieces import Pawn, Rook, Knight, Bishop, Queen, King
+from .pieces import Bishop, King, Knight, Pawn, Queen, Rook
 from .utils import is_square_under_attack
 
 
@@ -17,10 +16,7 @@ class Board:
         board = [[None for _ in range(8)] for _ in range(8)]
 
         for column in range(8):
-            board[1][column] = Pawn(
-                color="white",
-                position=(1, column),
-            )
+            board[1][column] = Pawn(color="white", position=(1, column))
 
         board[0][0] = Rook("white", (0, 0))
         board[0][1] = Knight("white", (0, 1))
@@ -32,10 +28,7 @@ class Board:
         board[0][7] = Rook("white", (0, 7))
 
         for column in range(8):
-            board[6][column] = Pawn(
-                color="black",
-                position=(6, column),
-            )
+            board[6][column] = Pawn(color="black", position=(6, column))
 
         board[7][0] = Rook("black", (7, 0))
         board[7][1] = Knight("black", (7, 1))
@@ -91,14 +84,9 @@ class Board:
 
         enemy_color = self.opposite_color(color)
 
-        return is_square_under_attack(
-            self.board,
-            king.position,
-            enemy_color,
-        )
+        return is_square_under_attack(self.board, king.position, enemy_color)
 
     def move_causes_check(self, piece, new_position):
-
         old_position = piece.position
 
         old_row, old_col = old_position
@@ -119,7 +107,6 @@ class Board:
         return king_is_in_check
 
     def get_legal_moves(self, piece):
-
         if piece is None:
             return []
 
@@ -151,9 +138,7 @@ class Board:
                 moves = self.get_legal_moves(piece)
 
                 for new_position in moves:
-                    legal_moves.append(
-                        (piece.position, new_position)
-                    )
+                    legal_moves.append((piece.position, new_position))
 
         return legal_moves
 
@@ -171,19 +156,12 @@ class Board:
         return False
 
     def is_checkmate(self, color):
-        return (
-            self.is_in_check(color)
-            and not self.has_legal_moves(color)
-        )
+        return self.is_in_check(color) and not self.has_legal_moves(color)
 
     def is_stalemate(self, color):
-        return (
-            not self.is_in_check(color)
-            and not self.has_legal_moves(color)
-        )
+        return not self.is_in_check(color) and not self.has_legal_moves(color)
 
     def get_game_state(self):
-
         color = self.side_to_move
 
         if self.is_checkmate(color):
@@ -197,11 +175,7 @@ class Board:
 
         return "playing"
 
-    def disable_castling_for_captured_rook(
-        self,
-        captured_piece,
-        captured_position,
-    ):
+    def disable_castling_for_captured_rook(self, captured_piece, captured_position):
         if not isinstance(captured_piece, Rook):
             return
 
@@ -223,39 +197,18 @@ class Board:
         piece = self.get_piece(start_position)
 
         if piece is None:
-            raise ValueError(
-                f"There is no piece at {start_position}."
-            )
+            raise ValueError(f"There is no piece at {start_position}.")
 
         if piece.color != self.side_to_move:
-            raise ValueError(
-                f"It is {self.side_to_move}'s turn."
-            )
+            raise ValueError(f"It is {self.side_to_move}'s turn.")
 
         legal_moves = self.get_legal_moves(piece)
 
         if new_position not in legal_moves:
-            raise ValueError(
-                f"{start_position} to {new_position} is illegal."
-            )
+            raise ValueError(f"{start_position} to {new_position} is illegal.")
 
         captured_piece = self.get_piece(new_position)
 
         piece.make_move(new_position, self)
 
-        self.disable_castling_for_captured_rook(
-            captured_piece,
-            new_position,
-        )
-
-    def quick_test(self):
-        piece = self.board[0][2]
-        return self.get_legal_moves(piece)
-
-    
-
-if __name__ == "__main__":
-    chess_board = Board()
-    chess_board.display()
-    print(chess_board.get_piece((4,1)))
-    print(chess_board.quick_test())
+        self.disable_castling_for_captured_rook(captured_piece, new_position)

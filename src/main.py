@@ -1,203 +1,70 @@
-import time
+import sys
 
 from bot.nn_bot import NNBot
-from bot.nn import NN
 from bot.search import search
-import chess_engine.board as board
-import chess_engine.utils as utils
+from chess_engine.board import Board
+from chess_engine.utils import translate_coordinates
 
 
-def check_game_state(chess_board):
-    color = chess_board.side_to_move
-
-    if chess_board.is_checkmate(color):
-        print(f"Checkmate! {color} loses.")
-        return "checkmate"
-
-    if chess_board.is_stalemate(color):
+def check_game_state(board):
+    state = board.get_game_state()
+    if state == "checkmate":
+        print(f"Checkmate! {board.side_to_move} loses.")
+    elif state == "stalemate":
         print("Stalemate! It's a draw.")
-        return "stalemate"
-
-    if chess_board.is_in_check(color):
-        print(f"{color} is in check!")
-        return "check"
-
-    return None
+    elif state == "check":
+        print(f"{board.side_to_move} is in check.")
+    return state
 
 
-def game_is_over(chess_board):
-    game_state = check_game_state(chess_board)
-
-    return game_state in ("checkmate", "stalemate")
-
-
-def get_bot_move(chess_bot, chess_board):
-    """
-    Runs search safely and returns:
-
-        start, end, evaluation
-
-    If no move is available, start and end will both be None.
-    """
-    result = search(chess_bot, chess_board)
-
-    if result is None:
-        return None, None, None
-
-    move, evaluation = result
-
+def play_bot_turn(bot, board):
+    move, evaluation = search(bot, board)
     if move is None:
-        return None, None, evaluation
-
-    start, end = move
-    return start, end, evaluation
-
-
-def nn_bot_vs_nn_bot():
-    chess_board = board.Board()
-
-    white_bot = NNBot(
-        color="white",
-        temperature=0.4,
-    )
-
-    black_bot = NNBot(
-        color="black",
-        temperature=0.4,
-    )
-
-    chess_board.display()
-
-    while True:
-        # Check whether the game already ended before White searches.
-        if game_is_over(chess_board):
-            break
-
-        print("\nWhite Bot's turn:")
-
-        start, end, evaluation = get_bot_move(
-            white_bot,
-            chess_board,
-        )
-
-        if start is None or end is None:
-            print("No legal moves available for the white bot.")
-            check_game_state(chess_board)
-            break
-
-        print(f"Bot's evaluation: {evaluation}")
-
-        white_piece = chess_board.get_piece(start)
-
-        if white_piece is None:
-            print(f"Search returned an invalid starting square: {start}")
-            break
-
-        white_piece.make_move(end, chess_board)
-        chess_board.display()
-
-        # White may have checkmated or stalemated Black.
-        if game_is_over(chess_board):
-            break
-
-        print("\nBlack Bot's turn:")
-
-        start, end, evaluation = get_bot_move(
-            black_bot,
-            chess_board,
-        )
-
-        if start is None or end is None:
-            print("No legal moves available for the black bot.")
-            check_game_state(chess_board)
-            break
-
-        print(f"Bot's evaluation: {evaluation}")
-
-        black_piece = chess_board.get_piece(start)
-
-        if black_piece is None:
-            print(f"Search returned an invalid starting square: {start}")
-            break
-
-        black_piece.make_move(end, chess_board)
-        chess_board.display()
-
-        # Black may have checkmated or stalemated White.
-        if game_is_over(chess_board):
-            break
+        return False
+    print(f"{bot.color.capitalize()} bot: {move}, evaluation: {evaluation}")
+    board.make_move(*move)
+    return True
 
 
-def play_against_nn_bot():
-    chess_board = board.Board()
+def play(watch=False):
+    board = Board()
+    bots = {"black": NNBot("black", temperature=0.4 if watch else 0.0)}
+    if watch:
+        bots["white"] = NNBot("white", temperature=0.4, nn=bots["black"].nn)
+    board.display()
 
-    chess_bot = NNBot(
-        color="black",
-        temperature=0.0,
-    )
-
-    chess_board.display()
-
-    while True:
-        # Check whether the position is already over before player input.
-        if game_is_over(chess_board):
-            break
-
-        move = input(
-            "Pick your piece and move separated by space: "
-        ).split()
-
-        if len(move) != 2:
-            print("Invalid input. Enter something like: e2 e4")
-            continue
-
-        start = utils.translate_coordinates(move[0])
-        end = utils.translate_coordinates(move[1])
-
-        piece = chess_board.get_piece(start)
-
-        if piece is None or piece.color != "white":
-            print("No white piece at the starting position.")
-            continue
-
-        piece.make_move(end, chess_board)
-        chess_board.display()
-
-        # The player's move may have ended the game.
-        if game_is_over(chess_board):
-            break
-
-        print("\nBot's turn:")
-        time.sleep(1)
-
-        start, end, evaluation = get_bot_move(
-            chess_bot,
-            chess_board,
-        )
-
-        if start is None or end is None:
-            print("No legal moves available for the bot.")
-            check_game_state(chess_board)
-            break
-
-        print(f"Bot's evaluation: {evaluation}")
-
-        bot_piece = chess_board.get_piece(start)
-
-        if bot_piece is None:
-            print(f"Search returned an invalid starting square: {start}")
-            break
-
-        bot_piece.make_move(end, chess_board)
-        chess_board.display()
-
-        # The bot's move may have ended the game.
-        if game_is_over(chess_board):
-            break
+    while check_game_state(board) not in ("checkmate", "stalemate"):
+        if board.side_to_move in bots:
+            if not play_bot_turn(bots[board.side_to_move], board):
+                break
+        else:
+            move = input("Your move (e2 e4), or q to quit: ").strip()
+            if move.lower() == "q":
+                break
+            if len(move.split()) != 2:
+                print("Enter two squares, like e2 e4.")
+                continue
+            try:
+                start, end = move.split()
+                board.make_move(
+                    translate_coordinates(start), translate_coordinates(end)
+                )
+            except ValueError as error:
+                print(f"Invalid move: {error}")
+                continue
+        board.display()
 
 
 if __name__ == "__main__":
-    ai = NN()
+    mode = sys.argv[1:]
+    if mode not in ([], ["watch"], ["board"]):
+        sys.exit("Usage: python src/main.py [watch|board]")
+    try:
+        if mode == ["board"]:
+            from interface.game import main
 
-    # play_against_nn_bot()
-    nn_bot_vs_nn_bot()
+            main()
+        else:
+            play(watch=mode == ["watch"])
+    except (KeyboardInterrupt, EOFError):
+        print("\nGame closed.")
